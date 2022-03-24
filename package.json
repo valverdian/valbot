@@ -4,7 +4,7 @@
   "description": "electron bot for twitch",
   "main": "main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "electron ."
   },
   "repository": {
     "type": "git",
@@ -20,5 +20,8 @@
   "bugs": {
     "url": "https://github.com/valverdian/valbot/issues"
   },
-  "homepage": "https://github.com/valverdian/valbot#readme"
+  "homepage": "https://github.com/valverdian/valbot#readme",
+  "devDependencies": {
+    "electron": "^17.2.0"
+  }
 }
