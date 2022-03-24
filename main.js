@@ -51,8 +51,8 @@ client.on('message', (channel, tags, message, self) => {
 
     if (self) return;
 
-    if (message.toLowerCase() === '!hello') {
+    if (message.toLowerCase().includes('!hello')) {
         client.say(channel, "@" + tags.username + ", Sup! ");
     }
-
+    
 })
