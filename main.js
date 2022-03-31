@@ -2,8 +2,10 @@ const { app, BrowserWindow } = require('electron');
 const path = require('path');
 const tmi = require('tmi.js');
 const fs = require('fs');
+const soundplay = require('sound-play');
 const rawData = fs.readFileSync(path.resolve(__dirname, 'twitch_auth.json'));
 let twitchAuth = JSON.parse(rawData);
+
 
 const createWindow = () => {
     const win = new BrowserWindow({

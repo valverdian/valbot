@@ -25,6 +25,7 @@
     "electron": "^17.2.0"
   },
   "dependencies": {
+    "sound-play": "^1.1.0",
     "tmi.js": "^1.8.5"
   }
 }
