@@ -4,7 +4,8 @@
   "description": "electron bot for twitch",
   "main": "main.js",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "make": "electron-packager . valbot --platform=win32"
   },
   "repository": {
     "type": "git",
@@ -22,7 +23,8 @@
   },
   "homepage": "https://github.com/valverdian/valbot#readme",
   "devDependencies": {
-    "electron": "^17.2.0"
+    "electron": "^17.2.0",
+    "electron-packager": "^15.4.0"
   },
   "dependencies": {
     "sound-play": "^1.1.0",
