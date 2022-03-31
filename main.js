@@ -8,6 +8,7 @@ const soundplay = require('sound-play');
 let twitchAuth;
 let settings;
 let twitchClient;
+let soundsList = [];
 
 const loadSettings = () => {
     const rawTwitchData = fs.readFileSync(path.resolve(__dirname, 'twitch_auth.json'));
@@ -15,6 +16,16 @@ const loadSettings = () => {
 
     const rawSettingsData = fs.readFileSync(path.resolve(__dirname, 'settings.json'));
     settings = JSON.parse(rawSettingsData);
+}
+
+const loadSoundList = () => {
+    var loadedSounds = fs.readdirSync(settings.sounds.sound_path);
+    console.log("sounds loaded: " + loadedSounds.length);
+
+    loadedSounds.forEach(sound => {
+        var candidateSound = sound.split(".mp3")[0];
+        soundsList.push(candidateSound);
+    });
 }
 
 const saveSettings = () => {
@@ -40,6 +51,7 @@ const createWindow = () => {
 app.whenReady().then(() => {
     // loadSettings and starting up twitch
     loadSettings();
+    loadSoundList();
     startupTwitch();
     createWindow()
 
@@ -86,7 +98,7 @@ const startupTwitch = () => {
         if (command === undefined) return;
 
         checkSocials(channel, command);
-        //checkSounds(tags, channel, command); 
+        checkSounds(tags, channel, command); 
     })
 }
 
@@ -110,7 +122,17 @@ function checkSocials(channel, command) {
     }
 }
 
-function checkSounds(tags, command) {
+function checkSounds(tags, channel, command) {
     //TODO: traverse through the sounds_path directory and see if you have file by the nameof the command
+
+    if(soundsList === undefined) return;
+
+    console.log("we have sounds to get through");
+
+    if(soundsList.includes(command)) {
+        console.log("oh hey! got a sound to play with");
+        soundplay.play(settings.sounds.sound_path + command + '.mp3');
+        twitchClient.say(channel, "@"+ tags.username + ", has played: " + command + ".");
+    }
 }
 

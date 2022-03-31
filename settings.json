@@ -6,7 +6,7 @@
         "github": "https://github.com/valverdian"
     },
     "sounds": {
-        "sound_path": "G:\\chatbot_backup_and_sounds\\resources\\sounds"
+        "sound_path": "G:/chatbot_backup_and_sounds/resources/sounds/mp3/"
     },
 
     "command_prefix": "!",
