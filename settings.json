@@ -1,0 +1,13 @@
+{
+    "socials": {
+        "discord": "https://discord.gg/PvgdjDhC",
+        "youtube": "https://www.youtube.com/channel/UCajgT661aNpJI1CEcISm0aQ",
+        "twitter": "https://twitter.com/valverdian",
+        "github": "https://github.com/valverdian"
+    },
+    "sounds": {
+        "soundPath": "G:\\chatbot_backup_and_sounds\\resources\\sounds"
+    },
+
+    "version": 1
+}
