@@ -56,10 +56,10 @@ app.on('window-all-closed', () => {
     }
 })
 
-
-ipcMain.handle("startTwitch", () => {
-    // startupTwitch(); //TODO: put this as the way to start later
-});
+// TODO we'll work on this later, nothing to see here
+// ipcMain.handle("startTwitch", () => {
+//     // startupTwitch();
+// });
 
 /* TWITCH PART */
 
@@ -80,31 +80,37 @@ const startupTwitch = () => {
         // if it was myself don't do anything
         if (self) return;
 
-        var command = hasCommand('!', message);
-        
+        var command = findAndSanitizeCommand(settings.command_prefix, message);
+
         // if there's no recognizable command don't do anything
         if (command === undefined) return;
 
-        if (message.toLowerCase().includes('!hello')) {
-            twitchClient.say(channel, "@" + tags.username + ", Sup! ");
-        }
+        checkSocials(channel, command);
+        //checkSounds(tags, channel, command); 
     })
 }
 
-/** checks for the existence of a command in a message */
-function hasCommand(prefix, message) {
+/** checks for the existence of a command in a message (always takes last one) */
+function findAndSanitizeCommand(prefix, message) {
     var foundCommand;
     var words = message.split(" ");
     words.forEach(word => {
         if (word.length >= 2 && word.charAt(0) === prefix) {
-            foundCommand = word;
+            foundCommand = word.slice(1);
         }
     });
 
     return foundCommand;
 }
 
-function checkSocials(tags, message) {
+function checkSocials(channel, command) {
+    var socialUrl = settings.socials[command.toLowerCase()];
+    if(socialUrl !== undefined){
+        twitchClient.say(channel, socialUrl);
+    }
+}
 
+function checkSounds(tags, command) {
+    //TODO: traverse through the sounds_path directory and see if you have file by the nameof the command
 }
 
