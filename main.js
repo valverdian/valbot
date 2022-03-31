@@ -123,15 +123,26 @@ function checkSocials(channel, command) {
 }
 
 function checkSounds(tags, channel, command) {
-    //TODO: traverse through the sounds_path directory and see if you have file by the nameof the command
 
+    // if the sounds list isn't defined. don't iterate or respond
     if(soundsList === undefined) return;
 
-    console.log("we have sounds to get through");
+    // if they just give the command then all the sounds are listed
+    if (command === settings.sounds.command) {
 
+        var resultMessage = ""
+
+        soundsList.forEach(sound => {
+            resultMessage = resultMessage + sound + ", ";
+        });
+
+        twitchClient.say(channel, "sounds list: " + resultMessage);
+    }
+    
+    // go through each sound and check
     if(soundsList.includes(command)) {
         console.log("oh hey! got a sound to play with");
-        soundplay.play(settings.sounds.sound_path + command + '.mp3');
+        soundplay.play(settings.sounds.sound_path + command + '.mp3', 130);
         twitchClient.say(channel, "@"+ tags.username + ", has played: " + command + ".");
     }
 }
