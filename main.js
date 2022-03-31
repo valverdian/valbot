@@ -77,27 +77,34 @@ const startupTwitch = () => {
 
     twitchClient.on('message', (channel, tags, message, self) => {
 
+        // if it was myself don't do anything
         if (self) return;
 
-        if (hasCommand('!', message)) {
-            
-            if (message.toLowerCase().includes('!hello')) {
-                twitchClient.say(channel, "@" + tags.username + ", Sup! ");
-            }
+        var command = hasCommand('!', message);
+        
+        // if there's no recognizable command don't do anything
+        if (command === undefined) return;
+
+        if (message.toLowerCase().includes('!hello')) {
+            twitchClient.say(channel, "@" + tags.username + ", Sup! ");
         }
     })
 }
 
 /** checks for the existence of a command in a message */
 function hasCommand(prefix, message) {
-    var foundCommand = false;
+    var foundCommand;
     var words = message.split(" ");
     words.forEach(word => {
-        if(word.length >= 2 && word.charAt(0) === prefix){
-            foundCommand = true;
+        if (word.length >= 2 && word.charAt(0) === prefix) {
+            foundCommand = word;
         }
     });
 
     return foundCommand;
+}
+
+function checkSocials(tags, message) {
+
 }
 
