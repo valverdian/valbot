@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const path = require('path');
 const tmi = require('tmi.js');
 const fs = require('fs');
@@ -9,6 +9,7 @@ let twitchAuth;
 let settings;
 let twitchClient;
 let soundsList = [];
+let mainWindow;
 
 const loadSettings = () => {
     const rawTwitchData = fs.readFileSync(path.resolve(__dirname, 'twitch_auth.json'));
@@ -19,6 +20,7 @@ const loadSettings = () => {
 }
 
 const loadSoundList = () => {
+    soundsList = [];
     var loadedSounds = fs.readdirSync(settings.sounds.sound_path);
     console.log("sounds loaded: " + loadedSounds.length);
 
@@ -31,11 +33,11 @@ const loadSoundList = () => {
 const saveSettings = () => {
     //TODO save settings
     // fs.writeFileSync(path.resolve(__dirname, 'twitch_auth.json'), JSON.stringify(twitchAuth));
-    //fs.writeFileSync(path.resolve(__dirname, 'settings.json'), JSON.stringify(settings));
+    fs.writeFileSync(path.resolve(__dirname, 'settings.json'), JSON.stringify(settings));
 }
 
 const createWindow = () => {
-    const win = new BrowserWindow({
+    mainWindow = new BrowserWindow({
         width: 800,
         height: 600,
         webPreferences: {
@@ -45,14 +47,12 @@ const createWindow = () => {
         }
     })
 
-    win.loadFile('index.html');
+    mainWindow.loadFile('index.html');
 }
 
 app.whenReady().then(() => {
-    // loadSettings and starting up twitch
+    // load Previous Settings
     loadSettings();
-    loadSoundList();
-    startupTwitch();
     createWindow()
 
     app.on('activate', () => {
@@ -68,14 +68,45 @@ app.on('window-all-closed', () => {
     }
 })
 
-// TODO we'll work on this later, nothing to see here
-// ipcMain.handle("startTwitch", () => {
-//     // startupTwitch();
-// });
+/* Listeners to renderer.js */
+
+ipcMain.handle("saveAndConnectBot", () => {
+    // TODO: when everything is setup
+    saveSettings();
+    loadSettings();
+    loadSoundList();
+    startupBot();
+});
+
+ipcMain.handle("disconnectBot", () => {
+    disconnectBot();
+});
+
+
+ipcMain.handle("setSoundsPath", () => {
+    getSoundsPath();
+});
+
+
+const getSoundsPath = () => {
+    let options = {
+        title : "Choose Sound Path", 
+        defaultPath : "G:\\",
+        buttonLabel : "Save Path",
+        filters :[
+         {name: 'All Files', extensions: ['*']}
+        ],
+        properties: ['openDirectory']
+       }
+       
+       //Synchronous
+       let filePath = dialog.showOpenDialogSync(mainWindow, options)
+       settings.sounds.sound_path = filePath + "/";
+}
 
 /* TWITCH PART */
 
-const startupTwitch = () => {
+const startupBot = () => {
     twitchClient = new tmi.Client({
         options: { debug: true },
         identity: {
@@ -85,8 +116,10 @@ const startupTwitch = () => {
         channels: [twitchAuth.channel]
     });
 
-    twitchClient.connect();
+    twitchClient.connect().then(botConnectionSuccessCallback(), botConnectionFailedCallback());
+}
 
+function botConnectionSuccessCallback(result) {
     twitchClient.on('message', (channel, tags, message, self) => {
 
         // if it was myself don't do anything
@@ -100,6 +133,19 @@ const startupTwitch = () => {
         checkSocials(channel, command);
         checkSounds(tags, channel, command); 
     })
+
+    mainWindow.webContents.send('botConnected');
+}
+  
+function botConnectionFailedCallback(error) {
+    console.log(error);
+}
+
+function disconnectBot () {
+    twitchClient.disconnect().finally(()=> {
+        twitchClient = null; // wipes the current twitch client
+        mainWindow.webContents.send('botDisconnected');
+    });
 }
 
 /** checks for the existence of a command in a message (always takes last one) */
@@ -141,7 +187,6 @@ function checkSounds(tags, channel, command) {
     
     // go through each sound and check
     if(soundsList.includes(command)) {
-        console.log("oh hey! got a sound to play with");
         soundplay.play(settings.sounds.sound_path + command + '.mp3', 130);
         twitchClient.say(channel, "@"+ tags.username + ", has played: " + command + ".");
     }

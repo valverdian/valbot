@@ -1,7 +1,36 @@
 const { ipcRenderer } = window.require("electron");
 
-/** THIS JUST IS FOR DOING SOME SMALL JS GUI CHANGES **/
+/* Sounds Path */
+const setSoundsPathBtn = document.getElementById("set-sounds-path");
 
-// document.getElementById("start-twitch").addEventListener("click", function() {
-//     ipcRenderer.invoke('startTwitch')
-// });
+setSoundsPathBtn.addEventListener("click", () => {
+    ipcRenderer.invoke("setSoundsPath");  
+})
+
+/** Start Bot Code */
+
+let isStarted = false;
+const startBotBtn = document.getElementById("toggle-bot");
+startBotBtn.innerText = "Start";
+
+startBotBtn.addEventListener("click", () => {
+
+    if(!isStarted) {
+        startBotBtn.innerText = "connecting...";
+        ipcRenderer.invoke("saveAndConnectBot");
+    } else{
+        ipcRenderer.invoke("disconnectBot");
+    }
+})
+
+ipcRenderer.on("botConnected", () => {
+    startBotBtn.innerText = "Stop";
+    isStarted = true;
+});
+
+ipcRenderer.on("botDisconnected", () => {
+    startBotBtn.innerText = "Start";
+    isStarted = false;
+});
+
+/**  */
