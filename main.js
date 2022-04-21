@@ -74,7 +74,8 @@ app.on('window-all-closed', () => {
 
 /* Listeners to renderer.js */
 
-ipcMain.handle("saveAndConnectBot", () => {
+ipcMain.handle("saveAndConnectBot", (event, editedSettings) => {
+    settings = editedSettings;
     saveSettings();
     loadSettings();
     loadSoundList();
@@ -98,7 +99,7 @@ const getSoundsPath = () => {
        }
        
        let filePath = dialog.showOpenDialogSync(mainWindow, options)
-       settings.sounds.sound_path = filePath + "/";
+       mainWindow.webContents.send('newSoundsPath', filePath + "/");
 }
 
 /* TWITCH PART */
