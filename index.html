@@ -8,7 +8,16 @@
     <title>Valbot</title>
   </head>
   <body>
-    <button id="set-sounds-path">Select Sound Path</button>
+    <h3>Commands</h3>
+    command prefix: <input id="cmd-prefix"></input>
+    <h3>Sounds</h3>
+    sounds command name: <input id="sounds-cmd"></input>
+    <!-- Input to set the path yourself and display it when set-->
+    <p></p>
+    <button id="set-sounds-path">Select Sounds Path</button>
+    <input id="sounds-path" readonly></input>
+    <p></p>
+    <h3>Startup</h3>
     <button id="toggle-bot"></button>
     <script src="./renderer.js" defer></script>
     </body>

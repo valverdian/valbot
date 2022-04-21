@@ -48,6 +48,10 @@ const createWindow = () => {
     })
 
     mainWindow.loadFile('index.html');
+
+    mainWindow.webContents.once('dom-ready', () => {
+        mainWindow.webContents.send("settingsLoaded", settings);
+    });
 }
 
 app.whenReady().then(() => {
@@ -71,7 +75,6 @@ app.on('window-all-closed', () => {
 /* Listeners to renderer.js */
 
 ipcMain.handle("saveAndConnectBot", () => {
-    // TODO: when everything is setup
     saveSettings();
     loadSettings();
     loadSoundList();
@@ -87,19 +90,13 @@ ipcMain.handle("setSoundsPath", () => {
     getSoundsPath();
 });
 
-
 const getSoundsPath = () => {
     let options = {
-        title : "Choose Sound Path", 
-        defaultPath : "G:\\",
-        buttonLabel : "Save Path",
-        filters :[
-         {name: 'All Files', extensions: ['*']}
-        ],
+        title : "Choose a directory with your MP3s", 
+        defaultPath : settings.sounds.sound_path || "C://",
         properties: ['openDirectory']
        }
        
-       //Synchronous
        let filePath = dialog.showOpenDialogSync(mainWindow, options)
        settings.sounds.sound_path = filePath + "/";
 }
