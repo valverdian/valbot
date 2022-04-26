@@ -2,6 +2,20 @@ const { ipcRenderer } = window.require("electron");
 let editedSettings;
 let totalSocials = 0;
 
+
+
+/* socials interaction & button */
+const socialListDiv = document.getElementById("socials-list");
+const addSocialButton = document.getElementById("add-social");
+addSocialButton.addEventListener("click", () => {
+    const inputKey = document.createElement("input");
+    inputKey.id = `socialkey${totalSocials}`;
+    const inputValue = document.createElement("input");
+    inputValue.id = `socialvalue${totalSocials}`;
+    socialListDiv.appendChild(inputKey);
+    socialListDiv.appendChild(inputValue);
+})
+
 /* command prefix */
 const setCommandPrefixInput = document.getElementById("cmd-prefix");
 
@@ -74,10 +88,7 @@ const toggleEditable = (canEdit) => {
 }
 
 const renderSocialInputs = (socials) => {
-    const socialListDiv = document.getElementById("socials-list");
-
     if (socials) {
-
         var socialKeys = Object.keys(socials);
         socialKeys.forEach(socialKey => {
             const inputKey = document.createElement("input");
@@ -97,6 +108,8 @@ const renderSocialInputs = (socials) => {
         inputKey.id = `socialkey${totalSocials}`;
         const inputValue = document.createElement("input");
         inputValue.id = `socialvalue${totalSocials}`;
+        socialListDiv.appendChild(inputKey);
+        socialListDiv.appendChild(inputValue);
     }
 }
 
@@ -104,16 +117,16 @@ const saveSocialInputs = () => {
     const socialsList = document.getElementById("socials-list");
     const socialsIteration = (socialsList.childElementCount / 2)
 
+    editedSettings.socials = JSON.parse("{}");
+
     if(socialsList.hasChildNodes()) {
         for (var i = 0; i < socialsIteration; i++) {
             var socialKeyInput = socialsList.querySelector(`#socialkey${i}`)
             var socialValueInput = socialsList.querySelector(`#socialvalue${i}`)
 
-            if (socialKeyInput && socialValueInput) {
+            if (socialKeyInput && socialValueInput && socialKeyInput.value && socialValueInput.value) {
                 console.log("saving: " + socialKeyInput.value + "[" + socialValueInput.value + "]");
                 editedSettings.socials[socialKeyInput.value] = socialValueInput.value;
-            } else {
-                console.error("error reading from socialKeyInput or socialValueInput");
             }
         }
     }
