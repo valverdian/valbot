@@ -63,7 +63,7 @@ const bundleNewSettings = () => {
     editedSettings.command_prefix = setCommandPrefixInput.value;
     editedSettings.sounds.command = setSoundsCommandInput.value;
     editedSettings.sounds.sound_path = setSoundsPathInput.value;
-    // saveSocialInputs(); FIXME: this currently breaks over a null value on pulling document id stuff
+    saveSocialInputs();
 }
 
 const toggleEditable = (canEdit) => {
@@ -101,9 +101,20 @@ const renderSocialInputs = (socials) => {
 }
 
 const saveSocialInputs = () => {
-    for (var i = 0; i < (totalSocials-1); i++) {
-        const socialKeyInput = document.getElementById(`socialKey${i}`)
-        const socialValueInput = document.getElementById(`socialValue${i}`)
-        editedSettings.socials[socialKeyInput.value] = socialValueInput.value;
+    const socialsList = document.getElementById("socials-list");
+    const socialsIteration = (socialsList.childElementCount / 2)
+
+    if(socialsList.hasChildNodes()) {
+        for (var i = 0; i < socialsIteration; i++) {
+            var socialKeyInput = socialsList.querySelector(`#socialkey${i}`)
+            var socialValueInput = socialsList.querySelector(`#socialvalue${i}`)
+
+            if (socialKeyInput && socialValueInput) {
+                console.log("saving: " + socialKeyInput.value + "[" + socialValueInput.value + "]");
+                editedSettings.socials[socialKeyInput.value] = socialValueInput.value;
+            } else {
+                console.error("error reading from socialKeyInput or socialValueInput");
+            }
+        }
     }
 }
