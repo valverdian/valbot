@@ -144,7 +144,6 @@ const saveSocialInputs = () => {
             var socialValueInput = socialListDiv.querySelector(`#socialvalue${i}`)
 
             if (socialKeyInput && socialValueInput && socialKeyInput.value && socialValueInput.value) {
-                console.log("saving: " + socialKeyInput.value + "[" + socialValueInput.value + "]");
                 editedSettings.socials[socialKeyInput.value] = socialValueInput.value;
             }
         }
