@@ -1,19 +1,24 @@
-const { ipcRenderer } = window.require("electron");
+const { ipcRenderer, shell } = window.require("electron");
 let editedSettings;
+let editedAuthSettings;
 let totalSocials = 0;
 
+/* auth settings */
+const userNameInput = document.getElementById("user-name");
+const channelNameInput = document.getElementById("channel-name");
+const oauthPasswordInput = document.getElementById("oauth-password");
 
+/* generate oauth button */
+const openOauthBtn = document.getElementById("open-oauth");
+openOauthBtn.addEventListener("click", () => {
+    shell.openExternal("https://twitchapps.com/tmi/");
+})
 
 /* socials interaction & button */
 const socialListDiv = document.getElementById("socials-list");
-const addSocialButton = document.getElementById("add-social");
-addSocialButton.addEventListener("click", () => {
-    const inputKey = document.createElement("input");
-    inputKey.id = `socialkey${totalSocials}`;
-    const inputValue = document.createElement("input");
-    inputValue.id = `socialvalue${totalSocials}`;
-    socialListDiv.appendChild(inputKey);
-    socialListDiv.appendChild(inputValue);
+const addSocialBtn = document.getElementById("add-social");
+addSocialBtn.addEventListener("click", () => {
+    addSingleSocialInput();
 })
 
 /* command prefix */
@@ -31,17 +36,20 @@ setSoundsPathBtn.addEventListener("click", () => {
 })
 
 /** start bot */
-
 let isStarted = false;
 const startBotBtn = document.getElementById("toggle-bot");
 startBotBtn.innerText = "Start";
+startBotBtn.style.color = "white";
+startBotBtn.style.backgroundColor = "green";
+startBotBtn.style.display = "block";
+startBotBtn.style.width = "100%";
 
 startBotBtn.addEventListener("click", () => {
 
     if (!isStarted) {
         startBotBtn.innerText = "connecting...";
         bundleNewSettings();
-        ipcRenderer.invoke("saveAndConnectBot", editedSettings);
+        ipcRenderer.invoke("saveAndConnectBot", editedSettings, editedAuthSettings);
     } else {
         ipcRenderer.invoke("disconnectBot");
     }
@@ -49,20 +57,25 @@ startBotBtn.addEventListener("click", () => {
 
 ipcRenderer.on("botConnected", () => {
     startBotBtn.innerText = "Stop";
+    startBotBtn.style.backgroundColor = "red";
     isStarted = true;
     toggleEditable(isStarted)
 });
 
 ipcRenderer.on("botDisconnected", () => {
     startBotBtn.innerText = "Start";
+    startBotBtn.style.backgroundColor = "green";
     isStarted = false;
     toggleEditable(isStarted)
 });
 
 /** system level things */
-
-ipcRenderer.on("settingsLoaded", (event, settings) => {
+ipcRenderer.on("settingsLoaded", (event, settings, authSettings) => {
     editedSettings = settings;
+    editedAuthSettings = authSettings;
+    userNameInput.value = editedAuthSettings.username;
+    channelNameInput.value = editedAuthSettings.channel;
+    oauthPasswordInput.value = editedAuthSettings.password;
     setCommandPrefixInput.value = editedSettings.command_prefix;
     setSoundsCommandInput.value = editedSettings.sounds.command;
     setSoundsPathInput.value = editedSettings.sounds.sound_path;
@@ -74,6 +87,9 @@ ipcRenderer.on("newSoundsPath", (event, path) => {
 });
 
 const bundleNewSettings = () => {
+    editedAuthSettings.username = userNameInput.value;
+    editedAuthSettings.channel = channelNameInput.value;
+    editedAuthSettings.password = oauthPasswordInput.value;
     editedSettings.command_prefix = setCommandPrefixInput.value;
     editedSettings.sounds.command = setSoundsCommandInput.value;
     editedSettings.sounds.sound_path = setSoundsPathInput.value;
@@ -81,11 +97,19 @@ const bundleNewSettings = () => {
 }
 
 const toggleEditable = (canEdit) => {
+    userNameInput.disabled = canEdit;
+    channelNameInput.disabled = canEdit;
+    oauthPasswordInput.disabled = canEdit;
+    openOauthBtn.disabled = canEdit;
+    toggleEditableSocialInputs(canEdit);
+    addSocialBtn.disabled = canEdit;
     setCommandPrefixInput.disabled = canEdit;
     setSoundsCommandInput.disabled = canEdit;
     setSoundsPathInput.disabled = canEdit;
     setSoundsPathBtn.disabled = canEdit;
 }
+
+/* social inputs management */
 
 const renderSocialInputs = (socials) => {
     if (socials) {
@@ -100,29 +124,24 @@ const renderSocialInputs = (socials) => {
 
             socialListDiv.appendChild(inputKey);
             socialListDiv.appendChild(inputValue);
-
+            socialListDiv.appendChild(document.createElement("br"));
             totalSocials++;
         });
     } else {
-        const inputKey = document.createElement("input");
-        inputKey.id = `socialkey${totalSocials}`;
-        const inputValue = document.createElement("input");
-        inputValue.id = `socialvalue${totalSocials}`;
-        socialListDiv.appendChild(inputKey);
-        socialListDiv.appendChild(inputValue);
+        addSingleSocialInput();
     }
 }
 
 const saveSocialInputs = () => {
-    const socialsList = document.getElementById("socials-list");
-    const socialsIteration = (socialsList.childElementCount / 2)
+    const socialsIteration = (socialListDiv.childElementCount / 2)
 
+    // clear current socials
     editedSettings.socials = JSON.parse("{}");
 
-    if(socialsList.hasChildNodes()) {
+    if (socialListDiv.hasChildNodes()) {
         for (var i = 0; i < socialsIteration; i++) {
-            var socialKeyInput = socialsList.querySelector(`#socialkey${i}`)
-            var socialValueInput = socialsList.querySelector(`#socialvalue${i}`)
+            var socialKeyInput = socialListDiv.querySelector(`#socialkey${i}`)
+            var socialValueInput = socialListDiv.querySelector(`#socialvalue${i}`)
 
             if (socialKeyInput && socialValueInput && socialKeyInput.value && socialValueInput.value) {
                 console.log("saving: " + socialKeyInput.value + "[" + socialValueInput.value + "]");
@@ -130,4 +149,31 @@ const saveSocialInputs = () => {
             }
         }
     }
+}
+
+const toggleEditableSocialInputs = (canEdit) => {
+    const socialsIteration = (socialListDiv.childElementCount / 2)
+
+    if (socialListDiv.hasChildNodes()) {
+        for (var i = 0; i < socialsIteration; i++) {
+            var socialKeyInput = socialListDiv.querySelector(`#socialkey${i}`)
+            var socialValueInput = socialListDiv.querySelector(`#socialvalue${i}`)
+
+            if (socialKeyInput && socialValueInput) {
+                socialKeyInput.disabled = canEdit;
+                socialValueInput.disabled = canEdit;
+            }
+        }
+    }
+}
+
+const addSingleSocialInput = () => {
+    const inputKey = document.createElement("input");
+    inputKey.id = `socialkey${totalSocials}`;
+    const inputValue = document.createElement("input");
+    inputValue.id = `socialvalue${totalSocials}`;
+    socialListDiv.appendChild(inputKey);
+    socialListDiv.appendChild(inputValue);
+    socialListDiv.appendChild(document.createElement("br"));
+    totalSocials++;
 }

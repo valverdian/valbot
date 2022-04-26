@@ -31,15 +31,14 @@ const loadSoundList = () => {
 }
 
 const saveSettings = () => {
-    //TODO save settings
-    // fs.writeFileSync(path.resolve(__dirname, 'twitch_auth.json'), JSON.stringify(twitchAuth));
+    fs.writeFileSync(path.resolve(__dirname, 'twitch_auth.json'), JSON.stringify(twitchAuth));
     fs.writeFileSync(path.resolve(__dirname, 'settings.json'), JSON.stringify(settings));
 }
 
 const createWindow = () => {
     mainWindow = new BrowserWindow({
-        width: 800,
-        height: 600,
+        width: 600,
+        height: 1000,
         webPreferences: {
             nodeIntegration: true,
             contextIsolation: false,
@@ -50,7 +49,7 @@ const createWindow = () => {
     mainWindow.loadFile('index.html');
 
     mainWindow.webContents.once('dom-ready', () => {
-        mainWindow.webContents.send("settingsLoaded", settings);
+        mainWindow.webContents.send("settingsLoaded", settings, twitchAuth);
     });
 }
 
@@ -74,8 +73,9 @@ app.on('window-all-closed', () => {
 
 /* Listeners to renderer.js */
 
-ipcMain.handle("saveAndConnectBot", (event, editedSettings) => {
+ipcMain.handle("saveAndConnectBot", (event, editedSettings, authSettings) => {
     settings = editedSettings;
+    twitchAuth = authSettings;
     saveSettings();
     loadSettings();
     loadSoundList();
@@ -93,18 +93,19 @@ ipcMain.handle("setSoundsPath", () => {
 
 const getSoundsPath = () => {
     let options = {
-        title : "Choose a directory with your MP3s", 
-        defaultPath : settings.sounds.sound_path || "C://",
+        title: "Choose a directory with your MP3s",
+        defaultPath: settings.sounds.sound_path || "C://",
         properties: ['openDirectory']
-       }
-       
-       let filePath = dialog.showOpenDialogSync(mainWindow, options)
-       mainWindow.webContents.send('newSoundsPath', filePath + "/");
+    }
+
+    let filePath = dialog.showOpenDialogSync(mainWindow, options)
+    mainWindow.webContents.send('newSoundsPath', filePath + "/");
 }
 
 /* TWITCH PART */
 
 const startupBot = () => {
+    console.log("starting on channel: " + twitchAuth.channel);
     twitchClient = new tmi.Client({
         options: { debug: true },
         identity: {
@@ -129,18 +130,18 @@ function botConnectionSuccessCallback(result) {
         if (command === undefined) return;
 
         checkSocials(channel, command);
-        checkSounds(tags, channel, command); 
+        checkSounds(tags, channel, command);
     })
 
     mainWindow.webContents.send('botConnected');
 }
-  
+
 function botConnectionFailedCallback(error) {
     console.log(error);
 }
 
-function disconnectBot () {
-    twitchClient.disconnect().finally(()=> {
+function disconnectBot() {
+    twitchClient.disconnect().finally(() => {
         twitchClient = null; // wipes the current twitch client
         mainWindow.webContents.send('botDisconnected');
     });
@@ -161,7 +162,7 @@ function findAndSanitizeCommand(prefix, message) {
 
 function checkSocials(channel, command) {
     var socialUrl = settings.socials[command.toLowerCase()];
-    if(socialUrl !== undefined){
+    if (socialUrl !== undefined) {
         twitchClient.say(channel, socialUrl);
     }
 }
@@ -169,7 +170,7 @@ function checkSocials(channel, command) {
 function checkSounds(tags, channel, command) {
 
     // if the sounds list isn't defined. don't iterate or respond
-    if(soundsList === undefined) return;
+    if (soundsList === undefined) return;
 
     // if they just give the command then all the sounds are listed
     if (command === settings.sounds.command) {
@@ -182,11 +183,11 @@ function checkSounds(tags, channel, command) {
 
         twitchClient.say(channel, "sounds list: " + resultMessage);
     }
-    
+
     // go through each sound and check
-    if(soundsList.includes(command)) {
+    if (soundsList.includes(command)) {
         soundplay.play(settings.sounds.sound_path + command + '.mp3', 130);
-        twitchClient.say(channel, "@"+ tags.username + ", has played: " + command + ".");
+        twitchClient.say(channel, "@" + tags.username + ", has played: " + command + ".");
     }
 }
 
